@@ -53,7 +53,7 @@ fun MainScreen(
         )
         Spacer(modifier = Modifier.height(40.dp))
         val text = remember { mutableStateOf("Погода") }
-        Button(onClick = { weatherViewModel.SearchWeather(message.value) }) {
+        Button(onClick = { if(message.value != ""){weatherViewModel.SearchWeather(message.value) }}) {
             Text("Загрузить погоду", fontSize = 25.sp)
         }
         Spacer(modifier = Modifier.height(40.dp))
