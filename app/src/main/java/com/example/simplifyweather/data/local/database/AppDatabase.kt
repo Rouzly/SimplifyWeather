@@ -5,6 +5,7 @@ import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.simplifyweather.data.local.dao.FavoriteCityDao
 import com.example.simplifyweather.data.local.entity.FavoriteCity
 
 @Database(
@@ -14,7 +15,7 @@ import com.example.simplifyweather.data.local.entity.FavoriteCity
     version = 1
 )
 abstract class AppDatabase: RoomDatabase() {
-    abstract val dao: Dao
+    abstract fun favoriteCityDao(): FavoriteCityDao
     companion object{
         fun createDatabase(context: Context): AppDatabase{
             return Room.databaseBuilder(
