@@ -68,6 +68,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.constraintlayout)
     //implementation(libs.androidx.benchmark.common)
     //implementation(libs.appcrawler.platform)
     testImplementation(libs.junit)

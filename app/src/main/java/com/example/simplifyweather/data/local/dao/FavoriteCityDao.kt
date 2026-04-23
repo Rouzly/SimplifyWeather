@@ -20,4 +20,8 @@ interface FavoriteCityDao {
 
     @Query("SELECT COUNT(*) FROM favorite_cities WHERE cityName = :cityName")
     suspend fun isFavorite(cityName: String): Int
+
+    companion object {
+        var allFavorites: List<String> = TODO("initialize me")
+    }
 }
