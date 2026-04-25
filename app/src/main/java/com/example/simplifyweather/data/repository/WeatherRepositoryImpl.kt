@@ -17,7 +17,7 @@ class WeatherRepositoryImpl(
             dao.addFavorite(FavoriteCity(cityName = cityName))
             return true
         }
-        else{return false}
+        return false
     }
 
     override suspend fun removeFavorite(cityName: String) {

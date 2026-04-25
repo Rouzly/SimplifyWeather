@@ -11,8 +11,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.simplifyweather.ui.theme.SimplifyWeatherTheme
 import com.example.simplifyweather.data.remote.RetrofitInstance
+import com.example.simplifyweather.ui.screens.FavoritesScreen
 import com.example.simplifyweather.ui.screens.MainScreen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,8 +27,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            SimplifyWeatherTheme {
-                MainScreen()
+            val navController = rememberNavController()
+            NavHost(navController = navController, startDestination = "Main") {
+                composable("Main"){
+                    MainScreen(navController = navController)
+                }
+                composable("Favorite"){
+                    FavoritesScreen(navController = navController)
+                }
             }
         }
     }

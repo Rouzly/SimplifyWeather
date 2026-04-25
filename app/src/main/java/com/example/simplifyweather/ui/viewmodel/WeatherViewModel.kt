@@ -47,4 +47,9 @@ class WeatherViewModel(private val repository: WeatherRepository): ViewModel() {
             }
         }
     }
+    fun addFavorite(cityName: String) {
+        viewModelScope.launch {
+            repository.addFavorite(cityName)
+        }
+    }
 }

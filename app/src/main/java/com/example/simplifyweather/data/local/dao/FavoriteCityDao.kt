@@ -19,7 +19,7 @@ interface FavoriteCityDao {
     fun getAllFavorites(): Flow<List<FavoriteCity>>
 
     @Query("SELECT COUNT(*) FROM favorite_cities WHERE cityName = :cityName")
-    fun isFavorite(cityName: String): Int
+    suspend fun isFavorite(cityName: String): Int
 
     @Query("SELECT * FROM favorite_cities WHERE cityName = :cityName")
     suspend fun getFavoriteByCityName(cityName: String): FavoriteCity?
