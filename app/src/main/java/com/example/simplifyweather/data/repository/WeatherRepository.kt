@@ -1,15 +1,13 @@
 package com.example.simplifyweather.data.repository
 
-import android.R
-import androidx.constraintlayout.helper.widget.Flow
-import com.example.simplifyweather.data.local.dao.FavoriteCityDao
+import com.example.simplifyweather.data.local.entity.FavoriteCity
+import com.example.simplifyweather.data.remote.WeatherResponse
+import kotlinx.coroutines.flow.Flow
 
 interface WeatherRepository {
-    suspend fun addFavoite(id: String): String
-    suspend fun removeFavorite(data: String)
-    suspend fun getFavorites(): List<String> {
-
-        return FavoriteCityDao.getAllFavorites()
-    }
-    fun isFavorite(city: R.string): R.bool
+    suspend fun addFavorite(cityName: String): Boolean
+    suspend fun removeFavorite(cityName: String)
+    fun getFavorites(): Flow<List<FavoriteCity>>
+    suspend fun isFavorite(cityName: String): Boolean
+    suspend fun getWeather(cityName: String): WeatherResponse
 }

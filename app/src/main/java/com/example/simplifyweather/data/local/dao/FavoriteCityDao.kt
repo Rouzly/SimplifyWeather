@@ -19,9 +19,8 @@ interface FavoriteCityDao {
     fun getAllFavorites(): Flow<List<FavoriteCity>>
 
     @Query("SELECT COUNT(*) FROM favorite_cities WHERE cityName = :cityName")
-    suspend fun isFavorite(cityName: String): Int
+    fun isFavorite(cityName: String): Int
 
-    companion object {
-        var allFavorites: List<String> = TODO("initialize me")
-    }
+    @Query("SELECT * FROM favorite_cities WHERE cityName = :cityName")
+    suspend fun getFavoriteByCityName(cityName: String): FavoriteCity?
 }

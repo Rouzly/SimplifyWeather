@@ -9,15 +9,10 @@ import com.example.simplifyweather.App
 import com.example.simplifyweather.data.remote.RetrofitInstance
 import com.example.simplifyweather.data.repository.WeatherRepository
 import com.example.simplifyweather.data.repository.WeatherRepositoryImpl
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class WeatherViewModel(private val repository: WeatherRepository): ViewModel() {
-    private val _weatherState = MutableStateFlow<WeatherState>(WeatherState.Idle)
-    val weatherState: StateFlow<WeatherState> = _weatherState.asStateFlow()
+class FavoritesVeiwModel(private val repository: WeatherRepository): ViewModel() {
+    val favorites = repository.getFavorites()
     companion object{
         val factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory{
             @Suppress("UNCHECKED_CAST")
@@ -29,22 +24,13 @@ class WeatherViewModel(private val repository: WeatherRepository): ViewModel() {
                 val dao = database.favoriteCityDao();
                 val weatherApi = RetrofitInstance.api
                 val repository = WeatherRepositoryImpl(dao, weatherApi)
-                return WeatherViewModel(repository) as T
+                return FavoritesVeiwModel(repository) as T
             }
         }
     }
-    fun SearchWeather(city: String){
-        _weatherState.value = WeatherState.Loading;
+    fun removeFavorite(cityName: String){
         viewModelScope.launch {
-            //repository.getWeather(city)
-            try{
-                delay(1500)
-                val weather = repository.getWeather(city)
-                _weatherState.value = WeatherState.Success(weather)
-            }
-            catch(e: Exception){
-                _weatherState.value = WeatherState.Error(e.message)
-            }
+            repository.removeFavorite(cityName)
         }
     }
 }

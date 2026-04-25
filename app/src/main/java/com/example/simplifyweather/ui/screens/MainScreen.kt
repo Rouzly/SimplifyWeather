@@ -39,7 +39,6 @@ fun MainScreen(
     weatherViewModel: WeatherViewModel = viewModel(factory = WeatherViewModel.factory)
 ) {
     val state by weatherViewModel.weatherState.collectAsState()
-    val itemsList = weatherViewModel.itemList.collectAsState(initial = emptyList())
     val message = remember { mutableStateOf("") }
     Column(
         modifier = Modifier
