@@ -92,6 +92,7 @@ fun MainScreen(
             is WeatherState.Success -> {
                 Text(text = (state as WeatherState.Success).weather.name)
                 Text(text = (state as WeatherState.Success).weather.main.temp.toString())
+                val weatherType = (state as WeatherState.Success).weatherType
             }
 
             is WeatherState.Error -> {

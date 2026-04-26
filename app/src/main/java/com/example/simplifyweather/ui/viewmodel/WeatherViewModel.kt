@@ -9,6 +9,7 @@ import com.example.simplifyweather.App
 import com.example.simplifyweather.data.remote.RetrofitInstance
 import com.example.simplifyweather.data.repository.WeatherRepository
 import com.example.simplifyweather.data.repository.WeatherRepositoryImpl
+import com.example.simplifyweather.domain.model.WeatherType.Clear.getWeatherType
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,7 +41,9 @@ class WeatherViewModel(private val repository: WeatherRepository): ViewModel() {
             try{
                 delay(1500)
                 val weather = repository.getWeather(city)
-                _weatherState.value = WeatherState.Success(weather)
+                val weatherId = weather.weather.firstOrNull()?.id ?: 0
+                val weatherType = getWeatherType(weatherId)
+                _weatherState.value = WeatherState.Success(weather, weatherType)
             }
             catch(e: Exception){
                 _weatherState.value = WeatherState.Error(e.message)
