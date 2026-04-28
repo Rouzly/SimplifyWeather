@@ -131,8 +131,8 @@ fun MainScreen(
             fontSize = 60.sp,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .offset(x = (20).dp, y = 200.dp)
-                .graphicsLayer { rotationZ = -90f }
+                .offset(x = (35).dp, y = 200.dp)
+                .graphicsLayer { rotationZ = 90f }
         )
         Column(
             modifier = Modifier
@@ -144,13 +144,13 @@ fun MainScreen(
                     textStyle = TextStyle(fontSize = 25.sp),
                     modifier = Modifier.fillMaxWidth(),
                     onValueChange = { newText -> message.value = newText },
-                    /*colors = TextFieldDefaults.colors(
+                    colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.White.copy(alpha = 0.1f),
                         unfocusedContainerColor = Color.White.copy(alpha = 0.1f),
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
                         cursorColor = Color.White
-                    )*/
+                    )
                 )
                 IconButton(onClick = { weatherViewModel.addFavorite(message.value) }) {
                     Icon(
