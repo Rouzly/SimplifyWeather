@@ -10,10 +10,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.simplifyweather.ui.theme.SimplifyWeatherTheme
 import com.example.simplifyweather.data.remote.RetrofitInstance
 import com.example.simplifyweather.ui.screens.FavoritesScreen
@@ -28,9 +31,15 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val navController = rememberNavController()
-            NavHost(navController = navController, startDestination = "Main") {
-                composable("Main"){
-                    MainScreen(navController = navController)
+            NavHost(navController = navController, startDestination = "Main/{cityName}") {
+                composable(
+                    route = "Main/{cityName}",
+                    arguments = listOf(navArgument("cityName") { defaultValue = "" })
+                ) { backStackEntry ->
+                    val cityName = backStackEntry.arguments?.getString("cityName") ?: ""
+                    MainScreen(
+                        navController = navController
+                    )
                 }
                 composable("Favorite"){
                     FavoritesScreen(navController = navController)

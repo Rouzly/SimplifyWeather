@@ -3,6 +3,7 @@ package com.example.simplifyweather.ui.screens
 import android.graphics.ImageDecoder
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -78,7 +79,7 @@ fun FavoritesScreen(
                     items = favorites.value,
                     key = { index, favorite -> favorite.cityName }
                 ) { index, favorite ->
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.fillMaxWidth().clickable(onClick = {navController.navigate("Main/${favorite.cityName}")}), verticalAlignment = Alignment.CenterVertically) {
                         Row(modifier = Modifier.weight(1f)) {
                             Text(favorite.cityName, fontSize = 15.sp)
                             IconButton(onClick = {
