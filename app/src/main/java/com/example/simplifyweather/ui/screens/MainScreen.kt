@@ -12,10 +12,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -23,7 +23,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,8 +37,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.style.LineHeightStyle
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -108,9 +108,9 @@ fun MainScreen(
                 modifier = Modifier
                     .size(500.dp)
                     .align(Alignment.Center)
-                    .offset(y = 25.dp)
+                    .offset(x = 70.dp, y = 30.dp)
                     .graphicsLayer{
-                        rotationZ = -40f
+                        rotationZ = 25f
                     }
             )
             is WeatherType.Rain -> Image(
@@ -119,19 +119,55 @@ fun MainScreen(
                 modifier = Modifier
                     .size(700.dp)
                     .align(Alignment.Center)
-                    .offset(y = 25.dp)
+                    .offset(x = 25.dp,y = 25.dp)
                     .graphicsLayer {
                         rotationZ = 40f
                     }
             )
+            is WeatherType.Thunderstorm -> Image(
+                painter = painterResource(R.drawable.lightning_icon),
+                contentDescription = "lightningIcon",
+                modifier = Modifier
+                    .size(700.dp)
+                    .align(Alignment.Center)
+                    .offset(x = 100.dp,y = 120.dp)
+                    .graphicsLayer {
+                        rotationZ = 70f
+                    }
+            )
+            is WeatherType.Snow -> Image(
+                painter = painterResource(R.drawable.snow_icon),
+                contentDescription = "lightningIcon",
+                modifier = Modifier
+                    .size(700.dp)
+                    .align(Alignment.Center)
+                    .offset(y = 50.dp)
+                    .graphicsLayer {
+                        rotationZ = 90f
+                    }
+            )
+            is WeatherType.Mist -> Image(
+                painter = painterResource(R.drawable.fog_icon),
+                contentDescription = "sunIcon",
+                modifier = Modifier
+                    .size(600.dp)
+                    .align(Alignment.Center)
+                    .offset(y = 25.dp)
+            )
             else -> {}
         }
+        val textOffsetX = when (weatherName.length) {
+            in 0..4 -> 30.dp
+            else -> 70.dp
+        }
+
         Text(
-            weatherName,
+            weatherName.uppercase(),
             fontSize = 60.sp,
+            fontFamily = FontFamily(Font(R.font.maian_font)),
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .offset(x = (35).dp, y = 200.dp)
+                .offset(x = textOffsetX, y = 200.dp)
                 .graphicsLayer { rotationZ = 90f }
         )
         Column(
@@ -143,6 +179,10 @@ fun MainScreen(
                     value = message.value,
                     textStyle = TextStyle(fontSize = 25.sp),
                     modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions =  KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions =  KeyboardActions(onSearch = {if (message.value != "") {
+                        weatherViewModel.SearchWeather(message.value)
+                    }}),
                     onValueChange = { newText -> message.value = newText },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.White.copy(alpha = 0.1f),
@@ -159,13 +199,6 @@ fun MainScreen(
                 }
             }
             Spacer(modifier = Modifier.height(40.dp))
-            Button(onClick = {
-                if (message.value != "") {
-                    weatherViewModel.SearchWeather(message.value)
-                }
-            }) {
-                Text("Загрузить погоду", fontSize = 25.sp)
-            }
             Row(
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -197,7 +230,8 @@ fun MainScreen(
                     temperature = (state as WeatherState.Success).weather.main.temp.toInt().toString()
                     humidity = (state as WeatherState.Success).weather.main.humidity.toString()
                     windSpeed = (state as WeatherState.Success).weather.wind.speed.toString()
-                    weatherName = (state as WeatherState.Success).weather.weather[0].main
+                    val rawWeatherName = (state as WeatherState.Success).weather.weather[0].main
+                    weatherName = if (rawWeatherName == "Thunderstorm") "Stormy" else rawWeatherName
                 }
 
                 is WeatherState.Error -> {
