@@ -2,6 +2,7 @@ package com.example.simplifyweather.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -54,6 +55,11 @@ import com.example.simplifyweather.ui.theme.Thunderstorm
 import com.example.simplifyweather.ui.viewmodel.WeatherState
 import com.example.simplifyweather.ui.viewmodel.WeatherViewModel
 import com.example.simplifyweather.R
+import com.example.simplifyweather.ui.theme.Dark_Text_Color
+import com.example.simplifyweather.ui.theme.Light_Text_Color
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun MainScreen(
@@ -63,182 +69,247 @@ fun MainScreen(
     val state by weatherViewModel.weatherState.collectAsState()
     val message = remember { mutableStateOf("") }
     val backStackEntry = navController.currentBackStackEntry
-    val cityName = backStackEntry?.arguments?.getString("cityName") ?: ""
-    var weatherName by remember{mutableStateOf("")}
+    var cityName = backStackEntry?.arguments?.getString("cityName") ?: ""
+    var weatherName by remember { mutableStateOf("") }
     var temperature by remember { mutableStateOf("") }
-    var humidity by remember { mutableStateOf("") }
-    var windSpeed by remember { mutableStateOf("") }
+    var countryName by remember { mutableStateOf("") }
+    val currentDate = Date()
+    val formatter = SimpleDateFormat("EEEE, dd MMM", Locale.ENGLISH)
+    val formattedDate = formatter.format(currentDate)
     LaunchedEffect(cityName) {
         if (cityName.isNotBlank()) {
             message.value = cityName
             weatherViewModel.SearchWeather(cityName)
         }
     }
+
     val weatherType = when (val s = state) {
         is WeatherState.Success -> s.weatherType
         else -> WeatherType.Unknown
     }
-    Box(modifier = Modifier.fillMaxSize()) {
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .background(
-                when (weatherType) {
-                    is WeatherType.Clear -> Clear
-                    is WeatherType.Clouds -> Clouds
-                    is WeatherType.Rain -> Rain
-                    is WeatherType.Thunderstorm -> Thunderstorm
-                    is WeatherType.Snow -> Snow
-                    is WeatherType.Mist -> Mist
-                    else -> Color.Gray
-                }
-            )
-        )
-        when(weatherType) {
-            is WeatherType.Clear -> Image(
-                painter = painterResource(R.drawable.sun_icon),
-                contentDescription = "sunIcon",
-                modifier = Modifier
-                    .size(600.dp)
-                    .align(Alignment.Center)
-                    .offset(y = 25.dp)
-            )
-            is WeatherType.Clouds -> Image(
-                painter = painterResource(R.drawable.cloud_icon),
-                contentDescription = "cloudIcon",
-                modifier = Modifier
-                    .size(500.dp)
-                    .align(Alignment.Center)
-                    .offset(x = 70.dp, y = 30.dp)
-                    .graphicsLayer{
-                        rotationZ = 25f
-                    }
-            )
-            is WeatherType.Rain -> Image(
-                painter = painterResource(R.drawable.rain_icon),
-                contentDescription = "rainIcon",
-                modifier = Modifier
-                    .size(700.dp)
-                    .align(Alignment.Center)
-                    .offset(x = 25.dp,y = 25.dp)
-                    .graphicsLayer {
-                        rotationZ = 40f
-                    }
-            )
-            is WeatherType.Thunderstorm -> Image(
-                painter = painterResource(R.drawable.lightning_icon),
-                contentDescription = "lightningIcon",
-                modifier = Modifier
-                    .size(700.dp)
-                    .align(Alignment.Center)
-                    .offset(x = 100.dp,y = 120.dp)
-                    .graphicsLayer {
-                        rotationZ = 70f
-                    }
-            )
-            is WeatherType.Snow -> Image(
-                painter = painterResource(R.drawable.snow_icon),
-                contentDescription = "lightningIcon",
-                modifier = Modifier
-                    .size(700.dp)
-                    .align(Alignment.Center)
-                    .offset(y = 50.dp)
-                    .graphicsLayer {
-                        rotationZ = 90f
-                    }
-            )
-            is WeatherType.Mist -> Image(
-                painter = painterResource(R.drawable.fog_icon),
-                contentDescription = "sunIcon",
-                modifier = Modifier
-                    .size(600.dp)
-                    .align(Alignment.Center)
-                    .offset(y = 25.dp)
-            )
-            else -> {}
-        }
-        val textOffsetX = when (weatherName.length) {
-            in 0..4 -> 30.dp
-            else -> 70.dp
-        }
 
-        Text(
-            weatherName.uppercase(),
-            fontSize = 60.sp,
-            fontFamily = FontFamily(Font(R.font.maian_font)),
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .offset(x = textOffsetX, y = 200.dp)
-                .graphicsLayer { rotationZ = 90f }
-        )
-        Column(
+    val textColor = when(weatherType){
+        is WeatherType.Rain, is WeatherType.Thunderstorm, is WeatherType.Mist -> Dark_Text_Color
+        is WeatherType.Clear, is WeatherType.Clouds, is WeatherType.Snow -> Light_Text_Color
+        else -> Color.Gray
+    }
+
+    if (state is WeatherState.Success) {
+        temperature = (state as WeatherState.Success).weather.main.temp.toInt().toString()
+        cityName = (state as WeatherState.Success).weather.name
+        val rawWeatherName = (state as WeatherState.Success).weather.weather[0].main
+        weatherName = if (rawWeatherName == "Thunderstorm") "Stormy" else rawWeatherName
+        countryName = Locale("", (state as WeatherState.Success).weather.sys.country).getDisplayCountry(Locale.ENGLISH)
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Фон
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-        ) {
+                .background(
+                    when (weatherType) {
+                        is WeatherType.Clear -> Clear
+                        is WeatherType.Clouds -> Clouds
+                        is WeatherType.Rain -> Rain
+                        is WeatherType.Thunderstorm -> Thunderstorm
+                        is WeatherType.Snow -> Snow
+                        is WeatherType.Mist -> Mist
+                        else -> Color.Gray
+                    }
+                )
+        )
+
+        if (state is WeatherState.Success) {
+            when (weatherType) {
+                is WeatherType.Clear -> Image(
+                    painter = painterResource(R.drawable.sun_icon),
+                    contentDescription = "sunIcon",
+                    modifier = Modifier
+                        .size(600.dp)
+                        .align(Alignment.Center)
+                        .offset(y = 25.dp)
+                )
+                is WeatherType.Clouds -> Image(
+                    painter = painterResource(R.drawable.cloud_icon),
+                    contentDescription = "cloudIcon",
+                    modifier = Modifier
+                        .size(500.dp)
+                        .align(Alignment.Center)
+                        .offset(x = 70.dp, y = 70.dp)
+                        .graphicsLayer { rotationZ = 25f }
+                )
+                is WeatherType.Rain -> Image(
+                    painter = painterResource(R.drawable.rain_icon),
+                    contentDescription = "rainIcon",
+                    modifier = Modifier
+                        .size(700.dp)
+                        .align(Alignment.Center)
+                        .offset(x = 35.dp, y = 100.dp)
+                        .graphicsLayer { rotationZ = 40f }
+                )
+                is WeatherType.Thunderstorm -> Image(
+                    painter = painterResource(R.drawable.lightning_icon),
+                    contentDescription = "lightningIcon",
+                    modifier = Modifier
+                        .size(700.dp)
+                        .align(Alignment.Center)
+                        .offset(x = 100.dp, y = 200.dp)
+                        .graphicsLayer { rotationZ = 70f }
+                )
+                is WeatherType.Snow -> Image(
+                    painter = painterResource(R.drawable.snow_icon),
+                    contentDescription = "snowIcon",
+                    modifier = Modifier
+                        .size(700.dp)
+                        .align(Alignment.Center)
+                        .offset(y = 70.dp)
+                        .graphicsLayer { rotationZ = 90f }
+                )
+                is WeatherType.Mist -> Image(
+                    painter = painterResource(R.drawable.fog_icon),
+                    contentDescription = "fogIcon",
+                    modifier = Modifier
+                        .size(600.dp)
+                        .align(Alignment.Center)
+                        .offset(y = 25.dp)
+                )
+                else -> {}
+            }
+
+            val textOffsetX = when (weatherName) {
+                "Rain" -> 20.dp
+                "Clear" -> 35.dp
+                "Clouds" -> 55.dp
+                "Stormy" -> 55.dp
+                "Snow" -> 35.dp
+                else -> 25.dp
+            }
+            Text(
+                weatherName,
+                fontSize = 50.sp,
+                fontFamily = FontFamily(Font(R.font.comfortaa)),
+                color = textColor,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(x = textOffsetX, y = 240.dp)
+                    .graphicsLayer { rotationZ = 90f }
+            )
+        }
+
+        Column(modifier = Modifier.fillMaxSize()) {
             Row(modifier = Modifier.fillMaxWidth().padding(15.dp)) {
                 TextField(
                     value = message.value,
                     textStyle = TextStyle(fontSize = 25.sp),
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions =  KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions =  KeyboardActions(onSearch = {if (message.value != "") {
-                        weatherViewModel.SearchWeather(message.value)
-                    }}),
+                    modifier = Modifier.weight(1f),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(
+                        onSearch = {
+                            if (message.value.isNotBlank()) {
+                                weatherViewModel.SearchWeather(message.value)
+                            }
+                        }
+                    ),
                     onValueChange = { newText -> message.value = newText },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.White.copy(alpha = 0.1f),
                         unfocusedContainerColor = Color.White.copy(alpha = 0.1f),
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
+                        focusedTextColor = textColor,
+                        unfocusedTextColor = textColor,
+                        focusedIndicatorColor = textColor,
                         cursorColor = Color.White
                     )
                 )
-                IconButton(onClick = { weatherViewModel.addFavorite(message.value) }) {
+                IconButton(
+                    onClick = {
+                        if (message.value.isNotBlank()) {
+                            weatherViewModel.addFavorite(message.value)
+                        }
+                    }
+                ) {
                     Icon(
-                        imageVector = Icons.Filled.Star, contentDescription = "toFavButton"
+                        imageVector = Icons.Filled.Star,
+                        contentDescription = "toFavButton"
                     )
                 }
             }
+
             Spacer(modifier = Modifier.height(40.dp))
             Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = {
-                    navController.navigate("Favorite")
-                }) {
+                Column(
+                    modifier = Modifier.offset(x = 15.dp),
+                    Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = formattedDate,
+                        fontSize = 16.sp,
+                        color = textColor,
+                        fontFamily = FontFamily(Font(R.font.comfortaa)),
+                    )
+                    Text(
+                        cityName,
+                        fontSize = 30.sp,
+                        color = textColor,
+                        fontFamily = FontFamily(Font(R.font.comfortaa)),
+                        )
+                    Text(
+                        text = countryName,
+                        fontSize = 16.sp,
+                        color = textColor,
+                        fontFamily = FontFamily(Font(R.font.comfortaa)),
+                        )
+                }
+                IconButton(onClick = { navController.navigate("Favorite") }) {
                     Icon(
                         Icons.Filled.FavoriteBorder,
                         contentDescription = "favButton"
                     )
                 }
             }
-            Box(modifier = Modifier.fillMaxSize()) {
-                Text(
-                    text = "${temperature}°C",
-                    fontSize = 64.sp,
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(16.dp)
-                )
+            if (state is WeatherState.Success && temperature.isNotBlank()) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .offset(x = 15.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Text(
+                            text = temperature,
+                            color = textColor,
+                            fontSize = 160.sp,
+                            fontFamily = FontFamily(Font(R.font.montserrat_ace_regular)),
+                            letterSpacing = (-10).sp
+                        )
+                        Text(
+                            text = "°C",
+                            color = textColor,
+                            fontSize = 50.sp,
+                            fontFamily = FontFamily(Font(R.font.montserrat_ace_regular)),
+                            modifier = Modifier.offset(y = 25.dp)
+                        )
+                    }
+                }
             }
-            when (state) {
-                is WeatherState.Loading -> CircularProgressIndicator()
-                is WeatherState.Success -> {
-                    Text(text = (state as WeatherState.Success).weather.name)
-                    Text(text = (state as WeatherState.Success).weather.main.temp.toString())
-                    temperature = (state as WeatherState.Success).weather.main.temp.toInt().toString()
-                    humidity = (state as WeatherState.Success).weather.main.humidity.toString()
-                    windSpeed = (state as WeatherState.Success).weather.wind.speed.toString()
-                    val rawWeatherName = (state as WeatherState.Success).weather.weather[0].main
-                    weatherName = if (rawWeatherName == "Thunderstorm") "Stormy" else rawWeatherName
-                }
-
-                is WeatherState.Error -> {
-                    (state as WeatherState.Error).message?.let { Text(text = it) }
-                }
-
-                else -> {}
+        }
+        if (state is WeatherState.Loading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+        if (state is WeatherState.Error) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = (state as WeatherState.Error).message ?: "Ошибка загрузки")
             }
         }
     }

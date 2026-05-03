@@ -1,6 +1,7 @@
 package com.example.simplifyweather.ui.screens
 
 import android.graphics.ImageDecoder
+import android.hardware.lights.Light
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -40,6 +41,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.simplifyweather.domain.model.WeatherType
+import com.example.simplifyweather.ui.theme.Clear
+import com.example.simplifyweather.ui.theme.Clouds
+import com.example.simplifyweather.ui.theme.Dark_Text_Color
+import com.example.simplifyweather.ui.theme.Light_Text_Color
+import com.example.simplifyweather.ui.theme.Mist
+import com.example.simplifyweather.ui.theme.Rain
+import com.example.simplifyweather.ui.theme.Snow
+import com.example.simplifyweather.ui.theme.Thunderstorm
 import com.example.simplifyweather.ui.viewmodel.FavoritesVeiwModel
 import kotlinx.coroutines.launch
 
@@ -55,8 +65,8 @@ fun FavoritesScreen(
         snackbarHost = {
             SnackbarHost(snackbarHostState){ data ->
                 Snackbar(
+                    containerColor = Color.Transparent,
                     snackbarData = data,
-                    containerColor = Color.DarkGray,
                     contentColor = Color.LightGray,
                     actionColor = Color.LightGray
                 )
@@ -64,51 +74,56 @@ fun FavoritesScreen(
         }
     )
     { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize()){
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-                .padding(paddingValues)
-                .padding(10.dp)
-        ) {
-            LazyColumn(
-                Modifier.fillMaxSize()
+        Box(modifier = Modifier.fillMaxSize().background(Light_Text_Color)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(10.dp)
             ) {
-                itemsIndexed(
-                    items = favorites.value,
-                    key = { index, favorite -> favorite.cityName }
-                ) { index, favorite ->
-                    Row(Modifier.fillMaxWidth().clickable(onClick = {navController.navigate("Main/${favorite.cityName}")}), verticalAlignment = Alignment.CenterVertically) {
-                        Row(modifier = Modifier.weight(1f)) {
-                            Text(favorite.cityName, fontSize = 15.sp)
-                            IconButton(onClick = {
-                                scope.launch {
-                                    val result = snackbarHostState.showSnackbar(
-                                        "Удалить ${favorite.cityName}?",
-                                        actionLabel = "Отмена",
-                                        withDismissAction = false,
-                                        duration = SnackbarDuration.Short
-                                    )
-                                    if (result == SnackbarResult.Dismissed) {
-                                        favoritesViewModel.removeFavorite(favorite.cityName)
+                LazyColumn(
+                    Modifier.fillMaxSize()
+                ) {
+                    itemsIndexed(
+                        items = favorites.value,
+                        key = { index, favorite -> favorite.cityName }
+                    ) { index, favorite ->
+                        Row(
+                            Modifier.fillMaxWidth()
+                                .clickable(onClick = { navController.navigate("Main/${favorite.cityName}") }),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(modifier = Modifier.weight(1f)) {
+                                Text(favorite.cityName, fontSize = 15.sp, color = Dark_Text_Color)
+                                IconButton(onClick = {
+                                    scope.launch {
+                                        val result = snackbarHostState.showSnackbar(
+                                            "Удалить ${favorite.cityName}?",
+                                            actionLabel = "Отмена",
+                                            withDismissAction = false,
+                                            duration = SnackbarDuration.Short
+                                        )
+                                        if (result == SnackbarResult.Dismissed) {
+                                            favoritesViewModel.removeFavorite(favorite.cityName)
+                                        }
                                     }
+                                }) {
+                                    Icon(
+                                        Icons.Filled.Delete,
+                                        contentDescription = "deleteFavButton"
+                                    )
                                 }
-                            }) {
-                                Icon(
-                                    Icons.Filled.Delete,
-                                    contentDescription = "deleteFavButton"
-                                )
                             }
                         }
                     }
                 }
             }
-        }
-            IconButton(onClick = {navController.navigate("Main")},
+            IconButton(
+                onClick = { navController.navigateUp() },
                 modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(10.dp)){
+                    .align(Alignment.BottomStart)
+                    .padding(10.dp)
+            ) {
                 Icon(
                     Icons.Filled.Close,
                     contentDescription = "backButton"

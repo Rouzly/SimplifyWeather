@@ -15,3 +15,6 @@ val Rain = Color(0xFF233947)
 val Thunderstorm = Color(0xFF1b1c1e)
 val Snow = Color(0xFF8FAFC6)
 val Mist = Color(0xFF7A8289)
+
+val Dark_Text_Color = Color(0xFFF0F1F3)
+val Light_Text_Color = Color(0xFF2D2F31)

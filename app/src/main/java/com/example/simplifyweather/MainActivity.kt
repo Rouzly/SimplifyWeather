@@ -31,7 +31,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val navController = rememberNavController()
-            NavHost(navController = navController, startDestination = "Main/{cityName}") {
+            NavHost(navController = navController, startDestination = "Main/{cityName}", modifier = Modifier.fillMaxSize()) {
                 composable(
                     route = "Main/{cityName}",
                     arguments = listOf(navArgument("cityName") { defaultValue = "" })
