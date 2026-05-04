@@ -18,3 +18,4 @@ val Mist = Color(0xFF7A8289)
 
 val Dark_Text_Color = Color(0xFFF0F1F3)
 val Light_Text_Color = Color(0xFF2D2F31)
+val CardColor = Color(0xCC2D2F31)
