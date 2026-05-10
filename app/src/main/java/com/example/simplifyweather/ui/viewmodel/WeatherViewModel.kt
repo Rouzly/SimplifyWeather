@@ -1,5 +1,7 @@
 package com.example.simplifyweather.ui.viewmodel
 
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -19,6 +21,8 @@ import kotlinx.coroutines.launch
 class WeatherViewModel(private val repository: WeatherRepository): ViewModel() {
     private val _weatherState = MutableStateFlow<WeatherState>(WeatherState.Idle)
     val weatherState: StateFlow<WeatherState> = _weatherState.asStateFlow()
+    private val _selectedTabIndex = MutableStateFlow(0)
+    val selectedTabIndex: StateFlow<Int> = _selectedTabIndex.asStateFlow()
     companion object{
         val factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory{
             @Suppress("UNCHECKED_CAST")
@@ -54,5 +58,8 @@ class WeatherViewModel(private val repository: WeatherRepository): ViewModel() {
         viewModelScope.launch {
             repository.addFavorite(cityName)
         }
+    }
+    fun selectTab(index: Int){
+        _selectedTabIndex.value = index
     }
 }

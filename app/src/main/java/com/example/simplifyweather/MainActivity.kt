@@ -30,20 +30,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val navController = rememberNavController()
-            NavHost(navController = navController, startDestination = "Main/{cityName}", modifier = Modifier.fillMaxSize()) {
-                composable(
-                    route = "Main/{cityName}",
-                    arguments = listOf(navArgument("cityName") { defaultValue = "" })
-                ) { backStackEntry ->
-                    val cityName = backStackEntry.arguments?.getString("cityName") ?: ""
-                    MainScreen(
-                        navController = navController
-                    )
-                }
-                composable("Favorite"){
-                    FavoritesScreen(navController = navController)
-                }
+            SimplifyWeatherTheme {
+                MainScreen(
+                    navController = rememberNavController()
+                )
             }
         }
     }

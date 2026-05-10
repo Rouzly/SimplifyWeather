@@ -38,16 +38,26 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -56,6 +66,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.simplifyweather.R
 import com.example.simplifyweather.domain.model.WeatherType
+import com.example.simplifyweather.ui.components.AppTabRow
 import com.example.simplifyweather.ui.theme.CardColor
 import com.example.simplifyweather.ui.theme.Clear
 import com.example.simplifyweather.ui.theme.Clouds
@@ -66,17 +77,20 @@ import com.example.simplifyweather.ui.theme.Rain
 import com.example.simplifyweather.ui.theme.Snow
 import com.example.simplifyweather.ui.theme.Thunderstorm
 import com.example.simplifyweather.ui.viewmodel.FavoritesVeiwModel
+import com.example.simplifyweather.ui.viewmodel.WeatherViewModel
 import kotlinx.coroutines.launch
 import okhttp3.internal.wait
 
 @Composable
 fun FavoritesScreen(
     navController: NavController,
-    favoritesViewModel: FavoritesVeiwModel = viewModel(factory = FavoritesVeiwModel.factory)
+    favoritesViewModel: FavoritesVeiwModel = viewModel(factory = FavoritesVeiwModel.factory),
+    weatherViewModel: WeatherViewModel = viewModel(factory = WeatherViewModel.factory)
 ) {
     val favorites = favoritesViewModel.favorites.collectAsState(initial = emptyList())
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val tabIndex by weatherViewModel.selectedTabIndex.collectAsState()
     Scaffold(
         snackbarHost = {
             SnackbarHost(snackbarHostState){ data ->
@@ -103,6 +117,17 @@ fun FavoritesScreen(
                     fontFamily = FontFamily(Font(R.font.comfortaa)),
                     color = Dark_Text_Color,
                     modifier = Modifier
+                )
+                Spacer(modifier = Modifier.height(15.dp))
+                AppTabRow(
+                    tabIndex = tabIndex,
+                    tabs = listOf("Main", "Favourite", "Week"),
+                    onTabSelected = { index ->
+                        if (index == 1) {
+                            navController.navigate("Favorite")
+                        }
+                        weatherViewModel.selectTab(index)
+                    }
                 )
                 Spacer(modifier = Modifier.height(15.dp))
                 LazyColumn(
