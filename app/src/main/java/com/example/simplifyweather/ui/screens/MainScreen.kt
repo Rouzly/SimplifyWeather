@@ -1,35 +1,26 @@
 package com.example.simplifyweather.ui.screens
 
-import android.text.style.BackgroundColorSpan
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.AlertDialogDefaults.containerColor
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -37,17 +28,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -55,15 +43,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.ActivityNavigator
 import androidx.navigation.NavController
 import com.example.simplifyweather.domain.model.WeatherType
-import com.example.simplifyweather.ui.theme.Clear
-import com.example.simplifyweather.ui.theme.Clouds
-import com.example.simplifyweather.ui.theme.Mist
-import com.example.simplifyweather.ui.theme.Rain
-import com.example.simplifyweather.ui.theme.Snow
-import com.example.simplifyweather.ui.theme.Thunderstorm
 import com.example.simplifyweather.ui.viewmodel.WeatherState
 import com.example.simplifyweather.ui.viewmodel.WeatherViewModel
 import com.example.simplifyweather.R
@@ -74,10 +55,12 @@ import com.example.simplifyweather.ui.components.WeatherContent
 import com.example.simplifyweather.ui.theme.Dark_Text_Color
 import com.example.simplifyweather.ui.theme.Light_Text_Color
 import com.example.simplifyweather.ui.viewmodel.FavoritesVeiwModel
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun MainScreen(
     navController: NavController,
@@ -123,103 +106,80 @@ fun MainScreen(
             (state as WeatherState.Success).weather.sys.country
         ).getDisplayCountry(Locale.ENGLISH)
     }
-    if (state is WeatherState.Success) {
-
-    }
-    Box(modifier = Modifier.fillMaxSize()) {
-        WeatherArt(weatherType)
-        val textOffsetX = when (weatherName) {
-            "Rain" -> 20.dp
-            "Clear" -> 35.dp
-            "Clouds" -> 55.dp
-            "Stormy" -> 55.dp
-            "Snow" -> 35.dp
-            else -> 25.dp
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(snackbarHostState) { data ->
+                Snackbar(
+                    containerColor = Color.Transparent,
+                    snackbarData = data,
+                    contentColor = Color.LightGray,
+                    actionColor = Color.LightGray
+                )
+            }
         }
+    )
+    {
+        Box(modifier = Modifier.fillMaxSize()) {
+            WeatherArt(weatherType, textColor, weatherName)
+        }
+        Column(modifier = Modifier.fillMaxSize()) {
+            when (tabIndex) {
+                0 -> WeatherContent(
+                    formattedDate,
+                    cityName,
+                    countryName,
+                    temperature,
+                    textColor,
+                    searchText = message.value,
+                    onSearchTextChange = { message.value = it },
+                    onSearch = { if (message.value.isNotBlank()) weatherViewModel.SearchWeather(message.value) },
+                    onAddToFavorites = { if (message.value.isNotBlank()) weatherViewModel.addFavorite(message.value)},
+                    tabIndex = tabIndex,
+                    onTabSelected = {index -> weatherViewModel.selectTab(index)},
+                )
 
-        Text(
-            weatherName,
-            fontSize = 50.sp,
-            fontFamily = FontFamily(Font(R.font.comfortaa)),
-            color = textColor,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .offset(x = textOffsetX, y = 240.dp)
-                .graphicsLayer { rotationZ = 90f }
-        )
-    }
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        Row(modifier = Modifier.fillMaxWidth().padding(15.dp)) {
-            TextField(
-                value = message.value,
-                textStyle = TextStyle(fontSize = 25.sp),
-                modifier = Modifier.weight(1f),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(
-                    onSearch = {
-                        if (message.value.isNotBlank()) {
-                            weatherViewModel.SearchWeather(message.value)
+                1 -> FavoritesContent(
+                    favorites = favorites,
+                    onCityClick = { cityName ->
+                        weatherViewModel.selectTab(0)
+                        weatherViewModel.SearchWeather(cityName)
+                        message.value = cityName
+                    },
+                    onRemove = {cityToRemove ->
+                        scope.launch {
+                            val result = snackbarHostState.showSnackbar(
+                                "Удалить ${cityToRemove}?",
+                                actionLabel = "Отмена",
+                                withDismissAction = false,
+                                duration = SnackbarDuration.Short
+                            )
+                            if (result == SnackbarResult.Dismissed) {
+                                favoriteViewModel.removeFavorite(cityToRemove)
+                            }
                         }
-                    }
-                ),
-                onValueChange = { newText -> message.value = newText },
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.White.copy(alpha = 0.1f),
-                    unfocusedContainerColor = Color.White.copy(alpha = 0.1f),
-                    focusedTextColor = textColor,
-                    unfocusedTextColor = textColor,
-                    focusedIndicatorColor = textColor,
-                    cursorColor = Color.White
+                    },
+                    tabIndex,
+                    onTabSelected = {index -> weatherViewModel.selectTab(index)}
                 )
-            )
-            IconButton(
-                onClick = {
-                    if (message.value.isNotBlank()) {
-                        weatherViewModel.addFavorite(message.value)
-                    }
-                }
+            }
+        }
+        if (state is WeatherState.Loading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Star,
-                    contentDescription = "toFavButton"
-                )
+                CircularProgressIndicator()
             }
         }
-        AppTabRow(
-            tabIndex = tabIndex,
-            tabs = listOf("Main", "Favourite", "Week"),
-            contentColor = textColor,
-            onTabSelected = { index ->
-                if (index == 1) {
-                    navController.navigate("Favorite")
-                }
-                weatherViewModel.selectTab(index)
+        if (state is WeatherState.Error) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = (state as WeatherState.Error).message ?: "Ошибка загрузки")
             }
-        )
-        when(tabIndex){
-            0 -> WeatherContent(formattedDate, cityName, countryName, temperature, textColor, weatherType)
-            1 -> FavoritesContent(favorites, onClick = {favoriteViewModel.removeFavorite(cityName)})
-        }
-        Spacer(modifier = Modifier.height(40.dp))
-        if (state is WeatherState.Success && temperature.isNotBlank()) {
-            WeatherContent(formattedDate, cityName, countryName, temperature, textColor, weatherType)
-        }
-    }
-    if (state is WeatherState.Loading) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
-    }
-    if (state is WeatherState.Error) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(text = (state as WeatherState.Error).message ?: "Ошибка загрузки")
         }
     }
 }

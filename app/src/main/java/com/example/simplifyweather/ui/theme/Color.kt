@@ -1,7 +1,6 @@
 package com.example.simplifyweather.ui.theme
 
 import androidx.compose.ui.graphics.Color
-import com.example.simplifyweather.domain.model.WeatherType
 
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
