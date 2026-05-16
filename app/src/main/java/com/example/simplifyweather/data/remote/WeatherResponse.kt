@@ -1,7 +1,5 @@
 package com.example.simplifyweather.data.remote
 
-import android.R
-
 data class WeatherResponse(
     val name: String,
     val main: MainData,

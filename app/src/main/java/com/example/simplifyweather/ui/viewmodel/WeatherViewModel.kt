@@ -8,10 +8,12 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.simplifyweather.App
+import com.example.simplifyweather.data.remote.FiveDayWeatherResponse
 import com.example.simplifyweather.data.remote.RetrofitInstance
 import com.example.simplifyweather.data.repository.WeatherRepository
 import com.example.simplifyweather.data.repository.WeatherRepositoryImpl
 import com.example.simplifyweather.domain.model.WeatherType.Clear.getWeatherType
+import com.example.simplifyweather.ui.viewmodel.WeeklyForecastState.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,8 +23,11 @@ import kotlinx.coroutines.launch
 class WeatherViewModel(private val repository: WeatherRepository): ViewModel() {
     private val _weatherState = MutableStateFlow<WeatherState>(WeatherState.Idle)
     val weatherState: StateFlow<WeatherState> = _weatherState.asStateFlow()
+    private val _weeklyForecastState = MutableStateFlow<WeeklyForecastState>(Idle)
+    val weeklyForecastState: StateFlow<WeeklyForecastState> = _weeklyForecastState.asStateFlow()
     private val _selectedTabIndex = MutableStateFlow(0)
     val selectedTabIndex: StateFlow<Int> = _selectedTabIndex.asStateFlow()
+
     companion object{
         val factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory{
             @Suppress("UNCHECKED_CAST")
@@ -53,6 +58,20 @@ class WeatherViewModel(private val repository: WeatherRepository): ViewModel() {
                 _weatherState.value = WeatherState.Error(e.message)
             }
         }
+    }
+    fun loadWeeklyForecast(cityName: String) {
+        _weeklyForecastState.value = Loading;
+        viewModelScope.launch {
+            try{
+                delay(1500)
+                val weather = repository.getFiveDayForecast(cityName)
+                _weeklyForecastState.value = WeeklyForecastState.Success(weather)
+            }
+            catch (e: Exception){
+                _weeklyForecastState.value = WeeklyForecastState.Error(e.message)
+            }
+        }
+
     }
     fun addFavorite(cityName: String) {
         viewModelScope.launch {

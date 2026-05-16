@@ -67,6 +67,7 @@ fun MainScreen(
     weatherViewModel: WeatherViewModel = viewModel(factory = WeatherViewModel.factory),
     favoriteViewModel: FavoritesVeiwModel = viewModel(factory = FavoritesVeiwModel.factory)
 ) {
+    //weather
     val state by weatherViewModel.weatherState.collectAsState()
     val message = remember { mutableStateOf("") }
     val backStackEntry = navController.currentBackStackEntry
@@ -77,8 +78,11 @@ fun MainScreen(
     val currentDate = Date()
     val formatter = SimpleDateFormat("EEEE, dd MMM", Locale.ENGLISH)
     val formattedDate = formatter.format(currentDate)
+    //favorite
     val tabIndex by weatherViewModel.selectedTabIndex.collectAsState()
     val favorites = favoriteViewModel.favorites.collectAsState(initial = emptyList()).value
+    //forecast
+
     LaunchedEffect(cityName) {
         if (cityName.isNotBlank()) {
             message.value = cityName

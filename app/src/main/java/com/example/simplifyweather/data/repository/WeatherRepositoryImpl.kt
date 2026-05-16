@@ -2,6 +2,7 @@ package com.example.simplifyweather.data.repository
 
 import com.example.simplifyweather.data.local.dao.FavoriteCityDao
 import com.example.simplifyweather.data.local.entity.FavoriteCity
+import com.example.simplifyweather.data.remote.FiveDayWeatherResponse
 import com.example.simplifyweather.data.remote.RetrofitInstance
 import com.example.simplifyweather.data.remote.WeatherApi
 import com.example.simplifyweather.data.remote.WeatherResponse
@@ -38,5 +39,9 @@ class WeatherRepositoryImpl(
 
     override suspend fun getWeather(cityName: String): WeatherResponse {
         return Api.getWeather(cityName, RetrofitInstance.API_KEY, "metric")
+    }
+
+    override suspend fun getFiveDayForecast(cityName: String): FiveDayWeatherResponse {
+        return Api.getFiveDayForecast(cityName, RetrofitInstance.API_KEY, "metric")
     }
 }
