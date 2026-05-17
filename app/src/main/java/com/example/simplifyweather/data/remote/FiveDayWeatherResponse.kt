@@ -1,7 +1,10 @@
 package com.example.simplifyweather.data.remote
 
+import com.google.gson.annotations.SerializedName
+
 data class FiveDayWeatherResponse(
     val city: City,
+    @SerializedName("list")
     val forecasts: List<Forecast>
 )
 

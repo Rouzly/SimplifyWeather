@@ -48,13 +48,16 @@ import com.example.simplifyweather.domain.model.WeatherType
 import com.example.simplifyweather.ui.viewmodel.WeatherState
 import com.example.simplifyweather.ui.viewmodel.WeatherViewModel
 import com.example.simplifyweather.R
+import com.example.simplifyweather.data.remote.Forecast
 import com.example.simplifyweather.ui.components.AppTabRow
 import com.example.simplifyweather.ui.components.FavoritesContent
 import com.example.simplifyweather.ui.components.WeatherArt
 import com.example.simplifyweather.ui.components.WeatherContent
+import com.example.simplifyweather.ui.components.WeekContent
 import com.example.simplifyweather.ui.theme.Dark_Text_Color
 import com.example.simplifyweather.ui.theme.Light_Text_Color
 import com.example.simplifyweather.ui.viewmodel.FavoritesVeiwModel
+import com.example.simplifyweather.ui.viewmodel.WeeklyForecastState
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -82,11 +85,16 @@ fun MainScreen(
     val tabIndex by weatherViewModel.selectedTabIndex.collectAsState()
     val favorites = favoriteViewModel.favorites.collectAsState(initial = emptyList()).value
     //forecast
-
+    val weeklyForecastState by weatherViewModel.weeklyForecastState.collectAsState()
     LaunchedEffect(cityName) {
         if (cityName.isNotBlank()) {
             message.value = cityName
             weatherViewModel.SearchWeather(cityName)
+        }
+    }
+    LaunchedEffect(tabIndex, cityName) {
+        if (tabIndex == 2 && cityName.isNotBlank()) {
+            weatherViewModel.loadWeeklyForecast(cityName)
         }
     }
     val weatherType = when (val s = state) {
@@ -126,63 +134,88 @@ fun MainScreen(
     )
     {
         Box(modifier = Modifier.fillMaxSize()) {
-            WeatherArt(weatherType, textColor, weatherName)
-        }
-        Column(modifier = Modifier.fillMaxSize()) {
-            when (tabIndex) {
-                0 -> WeatherContent(
-                    formattedDate,
-                    cityName,
-                    countryName,
-                    temperature,
-                    textColor,
-                    searchText = message.value,
-                    onSearchTextChange = { message.value = it },
-                    onSearch = { if (message.value.isNotBlank()) weatherViewModel.SearchWeather(message.value) },
-                    onAddToFavorites = { if (message.value.isNotBlank()) weatherViewModel.addFavorite(message.value)},
-                    tabIndex = tabIndex,
-                    onTabSelected = {index -> weatherViewModel.selectTab(index)},
-                )
-
-                1 -> FavoritesContent(
-                    favorites = favorites,
-                    onCityClick = { cityName ->
-                        weatherViewModel.selectTab(0)
-                        weatherViewModel.SearchWeather(cityName)
-                        message.value = cityName
-                    },
-                    onRemove = {cityToRemove ->
-                        scope.launch {
-                            val result = snackbarHostState.showSnackbar(
-                                "Удалить ${cityToRemove}?",
-                                actionLabel = "Отмена",
-                                withDismissAction = false,
-                                duration = SnackbarDuration.Short
+            Box(modifier = Modifier.fillMaxSize()) {
+                WeatherArt(weatherType, textColor, weatherName)
+            }
+            Column(modifier = Modifier.fillMaxSize()) {
+                when (tabIndex) {
+                    0 -> WeatherContent(
+                        formattedDate,
+                        cityName,
+                        countryName,
+                        temperature,
+                        textColor,
+                        searchText = message.value,
+                        onSearchTextChange = { message.value = it },
+                        onSearch = {
+                            if (message.value.isNotBlank()) weatherViewModel.SearchWeather(
+                                message.value
                             )
-                            if (result == SnackbarResult.Dismissed) {
-                                favoriteViewModel.removeFavorite(cityToRemove)
+                        },
+                        onAddToFavorites = {
+                            if (message.value.isNotBlank()) weatherViewModel.addFavorite(
+                                message.value
+                            )
+                        },
+                        tabIndex = tabIndex,
+                        onTabSelected = { index -> weatherViewModel.selectTab(index) },
+                    )
+
+                    1 -> FavoritesContent(
+                        favorites = favorites,
+                        onCityClick = { cityName ->
+                            weatherViewModel.selectTab(0)
+                            weatherViewModel.SearchWeather(cityName)
+                            message.value = cityName
+                        },
+                        onRemove = { cityToRemove ->
+                            scope.launch {
+                                val result = snackbarHostState.showSnackbar(
+                                    "Удалить ${cityToRemove}?",
+                                    actionLabel = "Отмена",
+                                    withDismissAction = false,
+                                    duration = SnackbarDuration.Short
+                                )
+                                if (result == SnackbarResult.Dismissed) {
+                                    favoriteViewModel.removeFavorite(cityToRemove)
+                                }
                             }
+                        },
+                        tabIndex,
+                        onTabSelected = { index -> weatherViewModel.selectTab(index) }
+                    )
+
+                    2 -> when (val state = weeklyForecastState) {
+                        is WeeklyForecastState.Success -> {
+                            println("DEBUG: forecasts = ${state.weather.forecasts}")
+                            WeekContent(
+                                forecasts = state.weather.forecasts,
+                                cityName = cityName,
+                                tabIndex = tabIndex,
+                                onTabSelected = { index -> weatherViewModel.selectTab(index) },
+                            )
                         }
-                    },
-                    tabIndex,
-                    onTabSelected = {index -> weatherViewModel.selectTab(index)}
-                )
+                        is WeeklyForecastState.Loading -> CircularProgressIndicator()
+                        is WeeklyForecastState.Error -> Text("Ошибка")
+                        else -> {}
+                    }
+                }
             }
-        }
-        if (state is WeatherState.Loading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
+            if (state is WeatherState.Loading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
-        }
-        if (state is WeatherState.Error) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = (state as WeatherState.Error).message ?: "Ошибка загрузки")
+            if (state is WeatherState.Error) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = (state as WeatherState.Error).message ?: "Ошибка загрузки")
+                }
             }
         }
     }

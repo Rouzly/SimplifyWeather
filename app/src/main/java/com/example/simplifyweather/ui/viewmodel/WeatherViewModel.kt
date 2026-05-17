@@ -65,10 +65,10 @@ class WeatherViewModel(private val repository: WeatherRepository): ViewModel() {
             try{
                 delay(1500)
                 val weather = repository.getFiveDayForecast(cityName)
-                _weeklyForecastState.value = WeeklyForecastState.Success(weather)
+                _weeklyForecastState.value = Success(weather)
             }
             catch (e: Exception){
-                _weeklyForecastState.value = WeeklyForecastState.Error(e.message)
+                _weeklyForecastState.value = Error(e.message)
             }
         }
 
