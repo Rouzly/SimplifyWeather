@@ -4,6 +4,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 
 @Composable
@@ -13,8 +14,10 @@ fun AppTabRow(
     onTabSelected: (Int) -> Unit,
     contentColor: Color = Color.Cyan,
     containerColor: Color = Color.Transparent,
+    modifier: Modifier = Modifier
 ) {
     TabRow(
+        modifier = modifier,
         selectedTabIndex = tabIndex,
         containerColor = containerColor,
         contentColor = contentColor

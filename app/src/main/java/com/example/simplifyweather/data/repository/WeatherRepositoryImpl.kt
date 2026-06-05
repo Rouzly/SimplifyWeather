@@ -1,7 +1,9 @@
 package com.example.simplifyweather.data.repository
 
 import com.example.simplifyweather.data.local.dao.FavoriteCityDao
+import com.example.simplifyweather.data.local.dao.LastCityDao
 import com.example.simplifyweather.data.local.entity.FavoriteCity
+import com.example.simplifyweather.data.local.entity.LastCity
 import com.example.simplifyweather.data.remote.FiveDayWeatherResponse
 import com.example.simplifyweather.data.remote.RetrofitInstance
 import com.example.simplifyweather.data.remote.WeatherApi
@@ -11,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 
 class WeatherRepositoryImpl(
     private val dao : FavoriteCityDao,
+    private val LSdao: LastCityDao,
     private val Api: WeatherApi
 ): WeatherRepository{
     override suspend fun addFavorite(cityName: String): Boolean {
@@ -20,7 +23,12 @@ class WeatherRepositoryImpl(
         }
         return false
     }
-
+    override suspend fun saveLastCity(cityName: String) {
+        LSdao.saveLastCity(LastCity(cityName = cityName))
+    }
+    override suspend fun getLastCity(): String? {
+        return LSdao.getLastCity()?.cityName
+    }
     override suspend fun removeFavorite(cityName: String) {
         if(dao.isFavorite(cityName) > 0){
             val city = dao.getFavoriteByCityName(cityName)

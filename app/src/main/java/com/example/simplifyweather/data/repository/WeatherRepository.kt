@@ -12,4 +12,6 @@ interface WeatherRepository {
     suspend fun isFavorite(cityName: String): Boolean
     suspend fun getWeather(cityName: String): WeatherResponse
     suspend fun getFiveDayForecast(cityName: String): FiveDayWeatherResponse
+    suspend fun saveLastCity(cityName: String)
+    suspend fun getLastCity(): String?
 }

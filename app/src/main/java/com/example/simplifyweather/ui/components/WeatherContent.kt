@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -43,10 +44,9 @@ fun WeatherContent(
     onSearchTextChange: (String) -> Unit,
     onSearch: () -> Unit,
     onAddToFavorites: () -> Unit,
-    tabIndex: Int,
-    onTabSelected: (Int) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
+        Spacer(modifier = Modifier.height(20.dp))
         Row(modifier = Modifier.fillMaxWidth().padding(15.dp)) {
             TextField(
                 value = searchText,
@@ -83,14 +83,7 @@ fun WeatherContent(
                 )
             }
         }
-        Spacer(modifier = Modifier.height(5.dp))
-        AppTabRow(
-            tabIndex = tabIndex,
-            tabs = listOf("Main", "Favourite", "Week"),
-            contentColor = textColor,
-            onTabSelected = onTabSelected
-        )
-        Spacer(modifier = Modifier.height(15.dp))
+        Spacer(modifier = Modifier.height(70.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically

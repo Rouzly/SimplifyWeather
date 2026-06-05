@@ -115,7 +115,7 @@ fun WeatherArt(
             "Clouds" -> 55.dp
             "Stormy" -> 55.dp
             "Snow" -> 35.dp
-            else -> 25.dp
+            else -> 15.dp
         }
         Text(
             weatherName,

@@ -1,13 +1,19 @@
 package com.example.simplifyweather.ui.screens
 
 import android.annotation.SuppressLint
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -48,7 +54,6 @@ import com.example.simplifyweather.domain.model.WeatherType
 import com.example.simplifyweather.ui.viewmodel.WeatherState
 import com.example.simplifyweather.ui.viewmodel.WeatherViewModel
 import com.example.simplifyweather.R
-import com.example.simplifyweather.data.remote.Forecast
 import com.example.simplifyweather.ui.components.AppTabRow
 import com.example.simplifyweather.ui.components.FavoritesContent
 import com.example.simplifyweather.ui.components.WeatherArt
@@ -63,6 +68,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+@OptIn(ExperimentalFoundationApi::class)
+@RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun MainScreen(
@@ -70,7 +77,6 @@ fun MainScreen(
     weatherViewModel: WeatherViewModel = viewModel(factory = WeatherViewModel.factory),
     favoriteViewModel: FavoritesVeiwModel = viewModel(factory = FavoritesVeiwModel.factory)
 ) {
-    //weather
     val state by weatherViewModel.weatherState.collectAsState()
     val message = remember { mutableStateOf("") }
     val backStackEntry = navController.currentBackStackEntry
@@ -81,20 +87,31 @@ fun MainScreen(
     val currentDate = Date()
     val formatter = SimpleDateFormat("EEEE, dd MMM", Locale.ENGLISH)
     val formattedDate = formatter.format(currentDate)
-    //favorite
-    val tabIndex by weatherViewModel.selectedTabIndex.collectAsState()
     val favorites = favoriteViewModel.favorites.collectAsState(initial = emptyList()).value
-    //forecast
     val weeklyForecastState by weatherViewModel.weeklyForecastState.collectAsState()
+
+    val pagerState = rememberPagerState { 3 }
+    val coroutineScope = rememberCoroutineScope()
+
     LaunchedEffect(cityName) {
         if (cityName.isNotBlank()) {
             message.value = cityName
             weatherViewModel.SearchWeather(cityName)
         }
     }
-    LaunchedEffect(tabIndex, cityName) {
-        if (tabIndex == 2 && cityName.isNotBlank()) {
+
+    LaunchedEffect(pagerState.currentPage, cityName) {
+        if (pagerState.currentPage == 2 && cityName.isNotBlank()) {
             weatherViewModel.loadWeeklyForecast(cityName)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        weatherViewModel.loadLastCity { city ->
+            if (city.isNotBlank() && message.value.isBlank()) {
+                message.value = city
+                weatherViewModel.SearchWeather(city)
+            }
         }
     }
     val weatherType = when (val s = state) {
@@ -118,8 +135,10 @@ fun MainScreen(
             (state as WeatherState.Success).weather.sys.country
         ).getDisplayCountry(Locale.ENGLISH)
     }
+
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
     Scaffold(
         snackbarHost = {
             SnackbarHost(snackbarHostState) { data ->
@@ -131,40 +150,42 @@ fun MainScreen(
                 )
             }
         }
-    )
-    {
+    ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.fillMaxSize()) {
                 WeatherArt(weatherType, textColor, weatherName)
             }
-            Column(modifier = Modifier.fillMaxSize()) {
-                when (tabIndex) {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize()
+            ) { page ->
+                when (page) {
                     0 -> WeatherContent(
-                        formattedDate,
-                        cityName,
-                        countryName,
-                        temperature,
-                        textColor,
+                        formattedDate = formattedDate,
+                        cityName = cityName,
+                        countryName = countryName,
+                        temperature = temperature,
+                        textColor = textColor,
                         searchText = message.value,
                         onSearchTextChange = { message.value = it },
                         onSearch = {
-                            if (message.value.isNotBlank()) weatherViewModel.SearchWeather(
-                                message.value
-                            )
+                            if (message.value.isNotBlank()) {
+                                weatherViewModel.SearchWeather(message.value)
+                            }
                         },
                         onAddToFavorites = {
-                            if (message.value.isNotBlank()) weatherViewModel.addFavorite(
-                                message.value
-                            )
-                        },
-                        tabIndex = tabIndex,
-                        onTabSelected = { index -> weatherViewModel.selectTab(index) },
+                            if (message.value.isNotBlank()) {
+                                weatherViewModel.addFavorite(message.value)
+                            }
+                        }
                     )
 
                     1 -> FavoritesContent(
                         favorites = favorites,
                         onCityClick = { cityName ->
-                            weatherViewModel.selectTab(0)
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(0)
+                            }
                             weatherViewModel.SearchWeather(cityName)
                             message.value = cityName
                         },
@@ -180,42 +201,53 @@ fun MainScreen(
                                     favoriteViewModel.removeFavorite(cityToRemove)
                                 }
                             }
-                        },
-                        tabIndex,
-                        onTabSelected = { index -> weatherViewModel.selectTab(index) }
+                        }
                     )
 
-                    2 -> when (val state = weeklyForecastState) {
+                    2 -> when (val forecastState = weeklyForecastState) {
                         is WeeklyForecastState.Success -> {
-                            println("DEBUG: forecasts = ${state.weather.forecasts}")
                             WeekContent(
-                                forecasts = state.weather.forecasts,
-                                cityName = cityName,
-                                tabIndex = tabIndex,
-                                onTabSelected = { index -> weatherViewModel.selectTab(index) },
+                                forecasts = forecastState.weather.forecasts,
+                                cityName = cityName
                             )
                         }
+
                         is WeeklyForecastState.Loading -> CircularProgressIndicator()
-                        is WeeklyForecastState.Error -> Text("Ошибка")
+                        is WeeklyForecastState.Error -> Text("Ошибка загрузки прогноза")
                         else -> {}
                     }
                 }
             }
-            if (state is WeatherState.Loading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+            AppTabRow(
+                tabIndex = pagerState.currentPage,
+                tabs = listOf("Main", "Favourite", "Week"),
+                contentColor = textColor,
+                onTabSelected = { index ->
+                    coroutineScope.launch {
+                        pagerState.animateScrollToPage(index)
+                    }
+                },
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 100.dp)
+            )
+        }
+
+        if (state is WeatherState.Loading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
-            if (state is WeatherState.Error) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = (state as WeatherState.Error).message ?: "Ошибка загрузки")
-                }
+        }
+
+        if (state is WeatherState.Error) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = (state as WeatherState.Error).message ?: "Ошибка загрузки")
             }
         }
     }

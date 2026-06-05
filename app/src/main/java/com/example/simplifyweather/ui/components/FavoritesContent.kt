@@ -36,8 +36,6 @@ fun FavoritesContent(
     favorites: List<FavoriteCity>,
     onCityClick: (String)->Unit,
     onRemove: (String) -> Unit,
-    tabIndex: Int,
-    onTabSelected: (Int) -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     Scaffold(
@@ -62,18 +60,12 @@ fun FavoritesContent(
             ) {
                 Text(
                     "Favorite",
-                    fontSize = 64.sp,
+                    fontSize = 40.sp,
                     fontFamily = FontFamily(Font(R.font.comfortaa)),
                     color = Dark_Text_Color,
                     modifier = Modifier
                 )
-                Spacer(modifier = Modifier.height(15.dp))
-                AppTabRow(
-                    tabIndex = tabIndex,
-                    tabs = listOf("Main", "Favourite", "Week"),
-                    contentColor = Dark_Text_Color,
-                    onTabSelected = onTabSelected
-                )
+                Spacer(modifier = Modifier.height(70.dp))
                 LazyColumn(
                     Modifier.fillMaxSize().weight(1f)
                 ) {

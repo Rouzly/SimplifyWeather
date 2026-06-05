@@ -22,8 +22,9 @@ class FavoritesVeiwModel(private val repository: WeatherRepository): ViewModel()
             ): T {
                 val database = (checkNotNull(extras[APPLICATION_KEY]) as App).database
                 val dao = database.favoriteCityDao();
+                val LastCitydao = database.lastCityDao()
                 val weatherApi = RetrofitInstance.api
-                val repository = WeatherRepositoryImpl(dao, weatherApi)
+                val repository = WeatherRepositoryImpl(dao,LastCitydao ,weatherApi)
                 return FavoritesVeiwModel(repository) as T
             }
         }
