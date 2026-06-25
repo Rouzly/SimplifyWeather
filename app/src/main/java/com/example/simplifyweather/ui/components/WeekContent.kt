@@ -3,45 +3,31 @@ package com.example.simplifyweather.ui.components
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.simplifyweather.App
 import com.example.simplifyweather.R
 import com.example.simplifyweather.data.remote.Forecast
+import com.example.simplifyweather.domain.model.WeatherType.Clear.getWeatherType
 import com.example.simplifyweather.ui.theme.Dark_Text_Color
 import com.example.simplifyweather.ui.theme.Light_Text_Color
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.runtime.ComposableTarget
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import com.example.simplifyweather.domain.model.WeatherType.Clear.getWeatherType
-import com.example.simplifyweather.ui.theme.CardColor
-
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -60,8 +46,7 @@ fun WeekContent(
                 cityName,
                 fontSize = 40.sp,
                 fontFamily = FontFamily(Font(R.font.comfortaa)),
-                color = Dark_Text_Color,
-                modifier = Modifier
+                color = Dark_Text_Color
             )
             Spacer(modifier = Modifier.height(70.dp))
             LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -69,15 +54,23 @@ fun WeekContent(
                     items = days,
                     key = { (date, _) -> date }
                 ) { (date, forecastsForDay) ->
-                    val temps = forecastsForDay.map { it.main.temp }
-                    val avgTemp = temps.average().toInt().toString()
+                    val avgTemp = forecastsForDay.map { it.main.temp }.average().toInt().toString()
                     val minTemp = forecastsForDay.minOf { it.main.temp }.toInt().toString()
                     val maxTemp = forecastsForDay.maxOf { it.main.temp }.toInt().toString()
                     val mainForecast = forecastsForDay.firstOrNull { it.dt_txt.contains("12:00") }
                         ?: forecastsForDay.first()
                     val weatherId = mainForecast.weather.first().id
                     val weatherType = getWeatherType(weatherId)
-                    DayCard({expandedDate = if (expandedDate == date) null else date}, date, avgTemp, weatherType,minTemp, maxTemp)
+
+                    DayCard(
+                        onCardClick = { expandedDate = if (expandedDate == date) null else date },
+                        date = date,
+                        avgTemp = avgTemp,
+                        weatherType = weatherType,
+                        minTemp = minTemp,
+                        maxTemp = maxTemp
+                    )
+
                     if (expandedDate == date) {
                         Column(
                             modifier = Modifier
@@ -85,9 +78,11 @@ fun WeekContent(
                                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                         ) {
                             forecastsForDay.forEach { forecast ->
+                                val forecastWeatherId = forecast.weather.first().id
                                 HourlyForecastCard(
                                     time = forecast.dt_txt.substring(11, 16),
-                                    temperature = forecast.main.temp.toInt().toString()
+                                    temperature = forecast.main.temp.toInt().toString(),
+                                    weatherId = forecastWeatherId
                                 )
                             }
                         }

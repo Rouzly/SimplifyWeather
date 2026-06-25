@@ -218,10 +218,16 @@ fun MainScreen(
                     }
                 }
             }
+            val tabContentColor = if (pagerState.currentPage == 0) {
+                textColor
+            } else {
+                Dark_Text_Color
+            }
+
             AppTabRow(
                 tabIndex = pagerState.currentPage,
                 tabs = listOf("Main", "Favourite", "Week"),
-                contentColor = textColor,
+                contentColor = tabContentColor,
                 onTabSelected = { index ->
                     coroutineScope.launch {
                         pagerState.animateScrollToPage(index)

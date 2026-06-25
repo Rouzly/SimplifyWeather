@@ -9,17 +9,16 @@ import androidx.compose.ui.graphics.Color
 
 @Composable
 fun AppTabRow(
+    modifier: Modifier = Modifier,
     tabIndex: Int,
     tabs: List<String>,
-    onTabSelected: (Int) -> Unit,
-    contentColor: Color = Color.Cyan,
-    containerColor: Color = Color.Transparent,
-    modifier: Modifier = Modifier
+    contentColor: Color,
+    onTabSelected: (Int) -> Unit
 ) {
     TabRow(
         modifier = modifier,
         selectedTabIndex = tabIndex,
-        containerColor = containerColor,
+        containerColor = Color.Transparent,
         contentColor = contentColor
     ) {
         tabs.forEachIndexed { index, title ->
